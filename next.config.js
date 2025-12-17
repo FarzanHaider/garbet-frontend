@@ -4,7 +4,6 @@ const path = require('path')
 const nextConfig = {
   reactStrictMode: true,
   eslint: {
-    // This ignores those 50+ warnings so Railway can finish the build
     ignoreDuringBuilds: true,
   },
   typescript: {
@@ -13,9 +12,39 @@ const nextConfig = {
   
   // Environment variables
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://garbet-backend-production.up.railway.app/api',
   },
   
+  // Security Headers
+  async headers() {
+    return [
+      {
+        // Apply these headers to all routes in your application.
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            // 'unsafe-eval' is included to stop the 'eval' block errors.
+            // 'unsafe-inline' is often required by Next.js for styles/scripts.
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;"
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin'
+          }
+        ],
+      },
+    ]
+  },
+
   // Webpack configuration
   webpack: (config, { isServer }) => {
     config.resolve.alias = {
@@ -23,7 +52,6 @@ const nextConfig = {
       '@': path.resolve(__dirname),
     }
     
-    // Optimize bundle size
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -36,20 +64,17 @@ const nextConfig = {
     return config
   },
   
-  // Image optimization
   images: {
     domains: ['lh3.googleusercontent.com'],
     formats: ['image/avif', 'image/webp'],
-    unoptimized: true, // Helpful for free tier hosting to avoid memory issues
+    unoptimized: true,
   },
   
-  // Compression & Security
   compress: true,
   poweredByHeader: false,
   
-  // COMBINED Experimental features
   experimental: {
-    optimizeCss: false, // Set to FALSE to avoid the 'critters' error
+    optimizeCss: false, 
   },
 }
 
