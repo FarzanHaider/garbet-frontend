@@ -16,29 +16,32 @@ const nextConfig = {
   },
   
   // Security Headers
-  async headers() {
+ async headers() {
     return [
       {
-        // Apply these headers to all routes in your application.
         source: '/(.*)',
         headers: [
           {
             key: 'Content-Security-Policy',
-            // 'unsafe-eval' is included to stop the 'eval' block errors.
-            // 'unsafe-inline' is often required by Next.js for styles/scripts.
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;"
+            value: [
+              "default-src 'self';",
+              // 1. Allow API connections to your backend
+              "connect-src 'self' https://garbet-backend-production.up.railway.app;",
+              // 2. Allow scripts and 'eval'
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline';",
+              // 3. Allow styles from Google Fonts
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;",
+              // 4. Allow the actual font files
+              "font-src 'self' https://fonts.gstatic.com;",
+              // 5. Allow images
+              "img-src 'self' blob: data:;",
+              "object-src 'none';",
+              "upgrade-insecure-requests;"
+            ].join(' ')
           },
           {
             key: 'X-Frame-Options',
             value: 'DENY'
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff'
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin'
           }
         ],
       },
